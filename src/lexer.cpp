@@ -57,9 +57,8 @@ namespace {
         };
         static constexpr auto result =
                 detail::is_lexeme<is_keyword_mock, is_operator_mock, is_identifier_mock>("content");
-        REQUIRE(result.has_value());
-        REQUIRE(result->first == Lexeme{Identifier{"abc"}});
-        REQUIRE(result->second == "def");
+        REQUIRE(result.first == Lexeme{Identifier{"abc"}});
+        REQUIRE(result.second == "def");
     }
 
     TEST_CASE("is_lexeme uses is_operator") {
@@ -76,9 +75,8 @@ namespace {
         };
         static constexpr auto result =
                 detail::is_lexeme<is_keyword_mock, is_operator_mock>("content");
-        REQUIRE(result.has_value());
-        REQUIRE(result->first == Lexeme{Operator::plus});
-        REQUIRE(result->second == "def");
+        REQUIRE(result.first == Lexeme{Operator::plus});
+        REQUIRE(result.second == "def");
     }
 
     TEST_CASE("is_lexeme uses is_keyword") {
@@ -90,9 +88,8 @@ namespace {
                     std::in_place, Keyword::def, "def"};
         };
         static constexpr auto result = detail::is_lexeme<is_keyword_mock>("content");
-        REQUIRE(result.has_value());
-        REQUIRE(result->first == Lexeme{Keyword::def});
-        REQUIRE(result->second == "def");
+        REQUIRE(result.first == Lexeme{Keyword::def});
+        REQUIRE(result.second == "def");
     }
 
     TEST_CASE("lexemes_length 0") {
@@ -106,6 +103,42 @@ namespace {
     TEST_CASE("lexemes_length 3") {
         static constexpr auto result = detail::lexeme_length("def def abc");
         REQUIRE(result == 3);
+    }
+
+    TEST_CASE("lex function header") {
+        static constexpr auto content = Content{R"(def func():
+)"};
+        static constexpr auto result = lex<content>();
+        static constexpr auto expected =
+                Lexemes{Keyword::def,
+                        Identifier{"func"},
+                        Operator::bracketleft,
+                        Operator::bracketright,
+                        Operator::semicolon,
+                        Operator::linebreak};
+        REQUIRE(result == expected);
+    }
+
+    TEST_CASE("is_identifier only letters") {
+        static constexpr auto content = R"(func():)";
+        static constexpr auto identifier = detail::is_identifier(content);
+        REQUIRE(identifier->first.value == "func");
+    }
+
+    TEST_CASE("lex function") {
+        static constexpr auto content = Content{R"(def func():
+    return 123)"};
+        static constexpr auto result = lex<content>();
+        static constexpr auto expected =
+                Lexemes{Keyword::def,
+                        Identifier{"func"},
+                        Operator::bracketleft,
+                        Operator::bracketright,
+                        Operator::semicolon,
+                        Operator::linebreak,
+                        Keyword::return_,
+                        Literal{"123"}};
+        REQUIRE(result == expected);
     }
 
 }  // namespace
