@@ -2,3 +2,4 @@
 /cmake-build-debug-clang-cl/
 /cmake-build-debug-visual-studio/
 /cmake-build-debug/
+/cmake-build-release-clang-cl/*
