@@ -40,6 +40,11 @@ namespace {
         REQUIRE(result->second == " abc"sv);
     }
 
+    TEST_CASE("is_identifier 123") {
+        static constexpr auto result = detail::is_identifier("123");
+        REQUIRE_FALSE(result.has_value());
+    }
+
     TEST_CASE("is_lexeme uses is_identifier") {
         static constexpr auto is_keyword_mock = [](std::string_view const) constexpr noexcept {
             return std::optional<std::pair<Keyword, std::string_view>>{};
@@ -139,6 +144,20 @@ namespace {
                         Keyword::return_,
                         Literal{"123"}};
         REQUIRE(result == expected);
+    }
+
+    TEST_CASE("Identifier comparison") {
+        REQUIRE(Identifier{"abc"} == Identifier{"abc"});
+        REQUIRE_FALSE(Identifier{"abc"} == Identifier{"def"});
+        REQUIRE_FALSE(Identifier{"abc"} != Identifier{"abc"});
+        REQUIRE(Identifier{"abc"} != Identifier{"def"});
+    }
+
+    TEST_CASE("Literal comparison") {
+        REQUIRE(Literal{"abc"} == Literal{"abc"});
+        REQUIRE_FALSE(Literal{"abc"} == Literal{"def"});
+        REQUIRE_FALSE(Literal{"abc"} != Literal{"abc"});
+        REQUIRE(Literal{"abc"} != Literal{"def"});
     }
 
 }  // namespace

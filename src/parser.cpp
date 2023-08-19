@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <algorithm>
 #include <doctest/doctest.h>
 
 namespace ctpy {
@@ -30,7 +31,15 @@ namespace {
                         //
                         Keyword::return_,
                         Literal{"123"}};
-        // REQUIRE(parse<lexemes>() == expected);
+        REQUIRE(parse<lexemes>() == expected);
+    }
+
+    TEST_CASE("parse_return_subexpression") {
+        static constexpr auto lexemes = Lexemes{Literal{"123"}};
+        static constexpr auto result = detail::parse_return_subexpression(lexemes.elements);
+        REQUIRE(result.operation == Operation{ConstantOperation{0, Variable{123}}});
+        REQUIRE(result.return_index == 0);
+        REQUIRE(result.remaining_lexemes.empty());
     }
 
     TEST_CASE("calculate_parameters_count") {
@@ -67,6 +76,22 @@ namespace {
                 std::vector<Operation>{{ConstantOperation{0, 123}, ReturnOperation{0}}};
         auto const result = detail::build_operations(lexemes);
         REQUIRE(result == expected);
+    }
+
+    TEST_CASE("check_function_header") {
+        static constexpr auto lexemes =
+                Lexemes{Keyword::def,
+                        Identifier{"func"},
+                        Operator::bracketleft,
+                        Operator::bracketright,
+                        Operator::semicolon,
+                        Operator::linebreak,
+                        //
+                        Keyword::return_,
+                        Literal{"123"}};
+        static auto constexpr expected = Lexemes{Keyword::return_, Literal{"123"}};
+        static auto constexpr result = detail::check_function_header<lexemes>();
+        REQUIRE(std::ranges::equal(result, expected.elements));
     }
 
 }  // namespace

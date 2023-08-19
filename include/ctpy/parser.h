@@ -35,7 +35,7 @@ namespace detail {
                                 0,
                                 lexemes.subspan<1>()};
                     } else {
-                        abort();
+                        throw "Could not parse return sub-expression";  // NOLINT(*-exception-baseclass)
                     }
                 },
                 lexemes.front());
@@ -82,11 +82,37 @@ namespace detail {
         std::size_t operation_count;
     };
 
+    constexpr std::size_t
+    determine_stack_size(std::span<Operation const> const operations) noexcept {
+        auto stack_size = std::size_t{0};
+        for (auto const& operation: operations) {
+            stack_size = std::max(
+                    stack_size,
+                    std::visit(
+                            []<class T>(T const& operation) -> std::size_t {
+                                if constexpr (std::is_same_v<T, AdditionOperation>) {
+                                    return std::max(
+                                                   operation.lhs,
+                                                   std::max(operation.rhs, operation.target)) +
+                                           1;
+                                } else if constexpr (std::is_same_v<T, AssignOperation>) {
+                                    return std::max(operation.from, operation.to) + 1;
+                                } else if constexpr (std::is_same_v<T, ConstantOperation>) {
+                                    return operation.index + 1;
+                                } else if constexpr (std::is_same_v<T, ReturnOperation>) {
+                                    return operation.stack_index + 1;
+                                }
+                            },
+                            operation));
+        }
+        return stack_size;
+    }
+
     template<auto build_operations_func = build_operations>
     constexpr FunctionParameters
     calculate_function_parameters(std::span<Lexeme const> const lexemes) noexcept {
         auto const operations = build_operations_func(lexemes);
-        return {0U, 0U, operations.size()};
+        return {determine_stack_size(operations), 0U, operations.size()};
     }
 
     template<auto const& lexemes>
@@ -99,7 +125,7 @@ namespace detail {
         static_assert(lexemes_view[3] == Lexeme{Operator::bracketright});
         static_assert(lexemes_view[4] == Lexeme{Operator::semicolon});
         static_assert(lexemes_view[5] == Lexeme{Operator::linebreak});
-        return lexemes_view.subspan<5>();
+        return lexemes_view.subspan<6>();
     }
 
 }  // namespace detail

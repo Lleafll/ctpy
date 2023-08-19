@@ -107,13 +107,13 @@ namespace detail {
     };
 
     inline constexpr auto is_literal = [](std::string_view const content) constexpr noexcept
-            -> std::optional<std::pair<Identifier, std::string_view>> {
+            -> std::optional<std::pair<Literal, std::string_view>> {
         auto const end = static_cast<std::size_t>(
                 std::ranges::find_if_not(
                         content, [](auto const c) { return c >= '0' && c <= '9'; }) -
                 content.begin());
-        return std::optional<std::pair<Identifier, std::string_view>>{
-                std::in_place, Identifier{content.substr(0, end)}, content.substr(end)};
+        return std::optional<std::pair<Literal, std::string_view>>{
+                std::in_place, Literal{content.substr(0, end)}, content.substr(end)};
     };
 
     inline constexpr auto is_identifier = [](std::string_view const content) constexpr noexcept

@@ -38,6 +38,7 @@ namespace {
                 ReturnOperation{3}};
         REQUIRE(func(1, 2) == Variable{8});
     }
+
 }  // namespace
 
 }  // namespace ctpy
