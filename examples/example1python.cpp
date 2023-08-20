@@ -6,6 +6,6 @@ main() {
     return 123)"};
     static constexpr auto lexed = ctpy::lex<python_code>();
     static constexpr auto func = ctpy::parse<lexed>();
-    static constexpr auto result = func();
-    return *std::get_if<int>(&result);
+    static constexpr auto result = std::get<int>(func());
+    return result;
 }
